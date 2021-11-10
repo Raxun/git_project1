@@ -37,6 +37,7 @@ class MyWidget(QMainWindow):
         self.tableWidget_2.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_2.verticalHeader().hide()
         self.tableWidget_2.horizontalHeader().hide()
+
         result = cur.execute("""SELECT DISTINCT years FROM games
                                 ORDER BY years ASC""").fetchall()
         self.tableWidget_3.setColumnCount(1)
@@ -53,6 +54,7 @@ class MyWidget(QMainWindow):
         self.tableWidget_3.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_3.verticalHeader().hide()
         self.tableWidget_3.horizontalHeader().hide()
+
         self.tableWidget_4.setColumnCount(1)
         self.tableWidget_4.setRowCount(2)
         sp = ['По возрастанию', 'По убыванию']
@@ -64,6 +66,7 @@ class MyWidget(QMainWindow):
         self.tableWidget_4.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_4.verticalHeader().hide()
         self.tableWidget_4.horizontalHeader().hide()
+
         self.btn_search.clicked.connect(self.search)
         self.con.commit()
 
@@ -128,15 +131,17 @@ class MyWidget(QMainWindow):
                                 if val != elem[-1]:
                                     self.tableWidget_1.setItem(x, y, QTableWidgetItem(str(val)))
                                 else:
-                                    self.tableWidget_1.setItem(x, 0, QTableWidgetItem(str(elem[-1])))
+                                    self.tableWidget_1.setItem(x, 0, QTableWidgetItem(str(elem[0])))
                         y += 1
                         if y == 4 and flag_string:
                             rowcount += 1
                         if y == 1:
-                            btn = QPushButton(str(x))
-                            btn.setText(elem[0])
-                            self.game_info.addButton(btn)
-                            self.tableWidget_1.setCellWidget(x, 0, btn)
+                            #btn = QPushButton(str(x))
+                            #btn.setText(elem[0])
+                            self.tableWidget_1.setItem(x, 0, QTableWidgetItem(elem[0]))
+                            #self.game_info.addButton(btn)
+                            #self.tableWidget_1.setCellWidget(x, 0, btn)
+
                 else:
                     x -= 1
             else:
@@ -154,26 +159,32 @@ class MyWidget(QMainWindow):
         self.tableWidget_1.horizontalHeader().resizeSection(0, 220)
         self.tableWidget_1.horizontalHeader().resizeSection(3, 317)
         self.tableWidget_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.game_info.buttonClicked.connect(self.open_game_info)
+        self.tableWidget_1.itemDoubleClicked.connect(self.open_game_info)
         self.con.commit()
 
-    def open_game_info(self, btn):
-        self.gi = GameInfo(btn)
-        self.gi.show()
+    def open_game_info(self, item):
+        cur = self.con.cursor()
+        result = cur.execute("""SELECT name_game FROM games""").fetchall()
+        for i, elem in enumerate(result):
+            if item.text() == elem[0]:
+                self.gi = GameInfo(item)
+                self.gi.show()
 
 
 class GameInfo(QMainWindow):
-    def __init__(self, btn):
+    def __init__(self, item):
         super().__init__()
         uic.loadUi("game_info.ui", self)
-        self.name_game = btn.text()
+        self.name_game = item.text()
         self.label_name.setText(self.name_game)
         self.con = sqlite3.connect("games_db.sqlite")
 
         cur = self.con.cursor()
+
         result = cur.execute("""SELECT * FROM games""").fetchall()
 
         sp_icon_games = ['Genshin Impact', 'Honkai Impact 3rd', 'The Crew 2', 'Rocket League']
+
         for i, elem in enumerate(result):
             if elem[1] == self.name_game:
                 self.label_image.setText(self.name_game)
