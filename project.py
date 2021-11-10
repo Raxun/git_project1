@@ -183,8 +183,7 @@ class Registration(QMainWindow):
         self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = user_name
         self.password = password
-
-
+        self.button.clicked.connect(self.create_account)
 
     def create_account(self):
         print('sdfdf')
