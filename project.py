@@ -26,7 +26,7 @@ class Login(QMainWindow):
         cur = con.cursor()
         user_name = self.lineEdit_name.text()
         password = self.lineEdit_pass.text()
-        result = cur.execute("""SELECT name_account, password FROM accounts""")
+        result = cur.execute("""SELECT name_account, password FROM accounts""").fetchall()
         for elem in result:
             if user_name == elem[0] and password == str(elem[-1]):
                 self.ex = MyWidget(user_name, password)
@@ -37,7 +37,8 @@ class Login(QMainWindow):
             elif user_name != elem[0] and password == str(elem[-1]):
                 self.lbl_name.setText('Неверное имя')
             else:
-                if self.lbl_pass.text() != 'Неверный пароль' and self.lbl_name.text() != 'Неверное имя':
+                if self.lbl_pass.text() != 'Неверный пароль' and self.lbl_name.text() != 'Неверное имя' and \
+                        elem == result[-1]:
                     self.lbl_error.setText('Такого аккаунта не существует!')
 
 
