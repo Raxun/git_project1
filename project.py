@@ -109,7 +109,6 @@ class MyWidget(QMainWindow):
         rowcount = 0
         sp = []
         flag_string = True
-        self.game_info = QButtonGroup()
         for i, elem in enumerate(result):
             if elem[1] == self.year_search or self.year_search == '':
                 if elem[0].lower() == self.lineEdit_search.text().lower() or self.lineEdit_search.text() == '':
@@ -136,12 +135,7 @@ class MyWidget(QMainWindow):
                         if y == 4 and flag_string:
                             rowcount += 1
                         if y == 1:
-                            #btn = QPushButton(str(x))
-                            #btn.setText(elem[0])
                             self.tableWidget_1.setItem(x, 0, QTableWidgetItem(elem[0]))
-                            #self.game_info.addButton(btn)
-                            #self.tableWidget_1.setCellWidget(x, 0, btn)
-
                 else:
                     x -= 1
             else:
