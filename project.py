@@ -305,8 +305,8 @@ class Profile(QMainWindow):
         self.password = password
         self.lineEdit_name.setText(self.user_name)
         self.lineEdit_pass.setText(self.password)
-        self.btn_name.clicked.connect(self.change_name)
-        self.btn_pass.clicked.connect(self.change_password)
+        self.changename.clicked.connect(self.change_name)
+        self.changepass.clicked.connect(self.change_password)
 
     def change_name(self):
         pass
