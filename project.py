@@ -7,23 +7,56 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QRadioButton, QButtonGroup, QPushButton, QAbstractItemView
 
 
-class MyWidget(QMainWindow):
+class Login(QMainWindow):
     def __init__(self):
+        super().__init__()
+        uic.loadUi("log_in.ui", self)
+        self.btn_create.clicked.connect(self.create_acc)
+        self.btn_login.clicked.connect(self.login)
+
+    def create_acc(self):
+        self.r = Registration()
+        self.r.show()
+
+    def login(self):
+        con = sqlite3.connect("games_db.sqlite")
+        self.lbl_pass.setText('')
+        self.lbl_name.setText('')
+        self.lbl_error.setText('')
+        cur = con.cursor()
+        user_name = self.lineEdit_name.text()
+        password = self.lineEdit_pass.text()
+        result = cur.execute("""SELECT name_account, password FROM accounts""")
+        for elem in result:
+            if user_name == elem[0] and password == str(elem[-1]):
+                self.ex = MyWidget(user_name, password)
+                self.ex.show()
+                self.close()
+            elif user_name == elem[0] and password != str(elem[-1]):
+                self.lbl_pass.setText('Неверный пароль')
+            elif user_name != elem[0] and password == str(elem[-1]):
+                self.lbl_name.setText('Неверное имя')
+            else:
+                if self.lbl_pass.text() != 'Неверный пароль' and self.lbl_name.text() != 'Неверное имя':
+                    self.lbl_error.setText('Такого аккаунта не существует!')
+
+
+class MyWidget(QMainWindow):
+    def __init__(self, user_name, password):
         super().__init__()
         uic.loadUi("main_window.ui", self)
         self.con = sqlite3.connect("games_db.sqlite")
 
         cur = self.con.cursor()
 
+        self.user_name = user_name
+        self.password = password
         self.genre = QButtonGroup()
         self.year = QButtonGroup()
         self.relevance = QButtonGroup()
         self.genre_search = ''
         self.year_search = ''
         self.relevance_search = ''
-
-        self.user_name = ''
-        self.password = ''
 
         result = cur.execute("""SELECT * FROM genres""").fetchall()
         self.tableWidget_2.setColumnCount(1)
@@ -168,33 +201,98 @@ class MyWidget(QMainWindow):
                 self.gi.show()
 
     def open_profile(self):
-        if self.user_name != '' and self.password != '':
-            self.p = Profile(self.user_name, self.password)
-            self.p.show()
-        else:
-            self.r = Registration(self.user_name, self.password)
-            self.r.show()
+        self.p = Profile(self.user_name, self.password)
+        self.p.show()
 
 
 class Registration(QMainWindow):
-    def __init__(self, user_name, password):
+    def __init__(self):
         super().__init__()
         uic.loadUi('registration.ui', self)
         self.con = sqlite3.connect("games_db.sqlite")
-        self.user_name = user_name
-        self.password = password
+        self.user_name = ''
+        self.password = ''
         self.button.clicked.connect(self.create_account)
+        self.btn_home.clicked.connect(self.home)
 
     def create_account(self):
-        print('sdfdf')
         cur = self.con.cursor()
-        '''
         name_new_acc = self.lineEdit_name.text()
         password_new_acc = self.lineEdit_pass.text()
-        print(name_new_acc, password_new_acc)
-        new_acc = cur.execute("""INSERT INTO accounts
-                              (name_account, password)
-                              VALUES (?, ?)""").fetchall()'''
+        if name_new_acc == '' or password_new_acc == '':
+            self.label_4.setText('Ошибка')
+        else:
+            limit_characters = 3
+            whitespace, dash, underscore = 0, 0, 0
+            result = cur.execute("""SELECT name_account, password FROM accounts""").fetchall()
+            flag_name = True
+            flag_password = True
+            past_letter = ''
+            for element in result:
+                if name_new_acc != element[0]:
+                    flag_name = True
+                else:
+                    flag_name = False
+            if 1 <= len(name_new_acc) <= 12:
+                for letter in name_new_acc:
+                    if (97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57) or \
+                            (ord(letter) == 32 or ord(letter) == 45 or ord(letter) == 95) or (ord(name_new_acc[-1])
+                                                                                              != 32):
+                        if ord(letter) == 32:
+                            if past_letter != '':
+                                if ord(past_letter) == 32:
+                                    self.lbl_errorn.setText('Нельзя ставить два пробела подряд')
+                                elif letter == name_new_acc[-1]:
+                                    self.lbl_errorn.setText('Нельзя ставить пробел в конце')
+                            whitespace += 1
+                            if whitespace > limit_characters:
+                                flag_name = False
+                                self.lbl_errorn.setText('Превышен лимит символа пробел, лимит - ' +
+                                                        str(limit_characters))
+                        elif ord(letter) == 45:
+                            dash += 1
+                            if dash > limit_characters:
+                                flag_name = False
+                                self.lbl_errorn.setText('Превышен лимит символа тире, лимит - ' + str(limit_characters))
+                        elif ord(letter) == 95:
+                            underscore += 1
+                            if underscore > limit_characters:
+                                flag_name = False
+                                self.lbl_errorn.setText('Превышен лимит символа нижнее подчеркивание, лимит - ' +
+                                                        str(limit_characters))
+                    else:
+                        flag_name = False
+                        self.lbl_errorn.setText('Разрешено использование только латинский букв, цифр, пробелов, тире, '
+                                                + 'нижних подчеркиваний ')
+                    past_letter = letter
+            else:
+                flag_name = False
+                self.lbl_errorn.setText('минимум 1 символ, максимум 12')
+
+            if 8 <= len(password_new_acc) <= 12:
+                for letter in name_new_acc:
+                    if 97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57:
+                        pass
+                    else:
+                        flag_password = False
+                        self.lbl_errorp.setText('Разрешено использование только латинских букв и цифр')
+            else:
+                self.lbl_errorp.setText('Длинна пароля должна быть не менее 8 символов и не более 12')
+
+            if flag_name and flag_password:
+                values1 = """INSERT INTO accounts (name_account, password)
+                                VALUES (?, ?)"""
+                values2 = (name_new_acc, password_new_acc)
+                cur.execute(values1, values2)
+                self.user_name = name_new_acc
+                self.password = password_new_acc
+                self.lbl_success.setText('Успешно')
+            else:
+                self.lbl_success.setText('Ошибка')
+            self.con.commit()
+
+    def home(self):
+        self.close()
 
 
 class Profile(QMainWindow):
@@ -204,7 +302,16 @@ class Profile(QMainWindow):
         self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = user_name
         self.password = password
+        self.lineEdit_name.setText(self.user_name)
+        self.lineEdit_pass.setText(self.password)
+        self.btn_name.clicked.connect(self.change_name)
+        self.btn_pass.clicked.connect(self.change_password)
 
+    def change_name(self):
+        pass
+
+    def change_name(self):
+        pass
 
 class GameInfo(QMainWindow):
     def __init__(self, item, user_name, password):
@@ -242,6 +349,6 @@ class GameInfo(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = MyWidget()
+    ex = Login()
     ex.show()
     sys.exit(app.exec())

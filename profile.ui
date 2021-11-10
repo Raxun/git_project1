@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>550</width>
-    <height>250</height>
+    <width>1000</width>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,60 +22,28 @@ color: rgb(255, 255, 255);
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>350</x>
       <y>10</y>
-      <width>221</width>
+      <width>301</width>
       <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(48, 48, 48);
 color: rgb(255, 255, 255);
-font: 14pt &quot;MS Shell Dlg 2&quot;;</string>
+font: 20pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
      <string>Профиль  пользователя </string>
     </property>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>50</y>
-      <width>361</width>
-      <height>73</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="styleSheet">
-        <string notr="true">background-color: rgb(48, 48, 48);
-color: rgb(255, 255, 255);
-font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
-       </property>
-       <property name="text">
-        <string>Избранное:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTableWidget" name="tableWidget_1">
-       <property name="styleSheet">
-        <string notr="true">background-color: rgb(48, 48, 48);
-color: rgb(255, 255, 255);</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>100</y>
-      <width>271</width>
-      <height>80</height>
+      <y>50</y>
+      <width>741</width>
+      <height>61</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -84,7 +52,7 @@ color: rgb(255, 255, 255);</string>
        <property name="styleSheet">
         <string notr="true">background-color: rgb(48, 48, 48);
 color: rgb(255, 255, 255);
-font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
        </property>
        <property name="text">
         <string>Имя:</string>
@@ -92,61 +60,120 @@ font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_1"/>
+      <widget class="QLineEdit" name="lineEdit_name">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
-   <widget class="QLabel" name="label_error">
+   <widget class="QLabel" name="error_name">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>129</y>
+      <x>760</x>
+      <y>70</y>
       <width>241</width>
-      <height>31</height>
+      <height>21</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_name">
+   <widget class="QWidget" name="horizontalLayoutWidget_3">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>192</y>
-      <width>101</width>
-      <height>31</height>
+      <y>130</y>
+      <width>741</width>
+      <height>61</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Изменить имя</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
+       </property>
+       <property name="text">
+        <string>Пароль:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit_pass">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
-   <widget class="QPushButton" name="btn_pass">
+   <widget class="QLabel" name="error_pass">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>192</y>
-      <width>111</width>
-      <height>31</height>
+      <x>760</x>
+      <y>150</y>
+      <width>241</width>
+      <height>21</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
+    </property>
     <property name="text">
-     <string>Изменить пароль</string>
+     <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_del">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>52</y>
-      <width>141</width>
-      <height>31</height>
+      <x>10</x>
+      <y>210</y>
+      <width>981</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Удалить элемент из списка</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="btn_pass">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
+       </property>
+       <property name="text">
+        <string>Изменить пароль</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_name">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
+       </property>
+       <property name="text">
+        <string>Изменить имя</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
  </widget>
