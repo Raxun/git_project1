@@ -22,6 +22,9 @@ class MyWidget(QMainWindow):
         self.year_search = ''
         self.relevance_search = ''
 
+        self.user_name = ''
+        self.password = ''
+
         result = cur.execute("""SELECT * FROM genres""").fetchall()
         self.tableWidget_2.setColumnCount(1)
         self.tableWidget_2.setRowCount(len(result) + 1)
@@ -66,7 +69,7 @@ class MyWidget(QMainWindow):
         self.tableWidget_4.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_4.verticalHeader().hide()
         self.tableWidget_4.horizontalHeader().hide()
-
+        self.btn_profile.clicked.connect(self.open_profile)
         self.btn_search.clicked.connect(self.search)
         self.con.commit()
 
@@ -161,14 +164,53 @@ class MyWidget(QMainWindow):
         result = cur.execute("""SELECT name_game FROM games""").fetchall()
         for i, elem in enumerate(result):
             if item.text() == elem[0]:
-                self.gi = GameInfo(item)
+                self.gi = GameInfo(item, self.user_name, self.password)
                 self.gi.show()
+
+    def open_profile(self):
+        if self.user_name != '' and self.password != '':
+            self.p = Profile(self.user_name, self.password)
+            self.p.show()
+        else:
+            self.r = Registration(self.user_name, self.password)
+            self.r.show()
+
+
+class Registration(QMainWindow):
+    def __init__(self, user_name, password):
+        super().__init__()
+        uic.loadUi('registration.ui', self)
+        self.con = sqlite3.connect("games_db.sqlite")
+        self.user_name = user_name
+        self.password = password
+        #self.btn_create.clicked.connect(self.create_account)
+
+    def create_account(self):
+        print('sdfdf')
+        '''cur = self.con.cursor()
+        name_new_acc = self.lineEdit_name.text()
+        password_new_acc = self.lineEdit_pass.text()
+        print(name_new_acc, password_new_acc)
+        new_acc = cur.execute("""INSERT INTO accounts
+                              (name_account, password)
+                              VALUES (?, ?)""").fetchall()'''
+
+
+class Profile(QMainWindow):
+    def __init__(self, user_name, password):
+        super().__init__()
+        uic.loadUi('profile.ui', self)
+        self.con = sqlite3.connect("games_db.sqlite")
+        self.user_name = user_name
+        self.password = password
 
 
 class GameInfo(QMainWindow):
-    def __init__(self, item):
+    def __init__(self, item, user_name, password):
         super().__init__()
         uic.loadUi("game_info.ui", self)
+        self.user_name = user_name
+        self.password = password
         self.name_game = item.text()
         self.label_name.setText(self.name_game)
         self.con = sqlite3.connect("games_db.sqlite")

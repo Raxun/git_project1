@@ -60,7 +60,7 @@ color: rgb(255, 255, 255);</string>
       <x>225</x>
       <y>50</y>
       <width>670</width>
-      <height>540</height>
+      <height>515</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -163,8 +163,8 @@ color: rgb(255, 255, 255);</string>
    <widget class="QPushButton" name="btn_search">
     <property name="geometry">
      <rect>
-      <x>225</x>
-      <y>10</y>
+      <x>227</x>
+      <y>12</y>
       <width>150</width>
       <height>30</height>
      </rect>
@@ -178,6 +178,24 @@ color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>Поиск</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>570</y>
+      <width>471</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+</string>
+    </property>
+    <property name="text">
+     <string>*Что-бы увидеть больше информации кликните дважды по названию интересующей игры</string>
     </property>
    </widget>
   </widget>
