@@ -1,6 +1,7 @@
 import sqlite3
 import sys
 
+from datetime import datetime
 from PyQt5 import uic, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
@@ -431,9 +432,63 @@ class GameInfo(QMainWindow):
                 self.label_image.setPixmap(pixmap)
                 self.textBrowser.setText(elem[-1])
         self.btn_home.clicked.connect(self.home)
+        result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
+                             (self.name_game,)).fetchall()
+        self.comments.setRowCount(len(result))
+        # максимум 100 символов
+        self.comments.setColumnCount(3)
+        self.comments.verticalHeader().hide()
+        self.comments.horizontalHeader().hide()
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+        self.comments.horizontalHeader().resizeSection(2, 167)
+        self.comments.horizontalHeader().resizeSection(1, 950)
+        self.comments.horizontalHeader().resizeSection(0, 160)
+        self.comments.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.btn_send.clicked.connect(self.send_comment)
+        self.comments.itemDoubleClicked.connect(self.del_come)
         self.con.commit()
 
+    def send_comment(self):
+        cur = self.con.cursor()
+        if 1 <= len(self.line_com.text()) <= 80 and self.line_com.text() != 'Максимум 100 символов':
+            datetime_string = str(datetime.now())
+            values1 = """INSERT INTO comments (name_game, name_com, comment, date)
+                            VALUES (?, ?, ?, ?)"""
+            values2 = (str(self.name_game), str(self.user_name), str(self.line_com.text()), str(datetime_string[:-10]))
+            cur.execute(values1, values2)
+            self.line_com.setText('')
+            self.con.commit()
+        else:
+            self.line_com.setText('Максимум 80 символов, минимум 1')
+        self.con = sqlite3.connect("games_db.sqlite")
+        cur = self.con.cursor()
+        result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
+                             (self.name_game,)).fetchall()
+        self.comments.setRowCount(len(result))
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+        self.con.commit()
 
+    def del_come(self, item):
+        cur = self.con.cursor()
+        result = cur.execute("""SELECT id, name_com, comment FROM comments""").fetchall()
+        for i, elem in enumerate(result):
+            if item.text() == elem[-1] and elem[1] == self.user_name:
+                del_id = elem[0]
+                cur.execute("""DELETE from comments where id = ?""", (del_id, ))
+                self.con.commit()
+        self.con = sqlite3.connect("games_db.sqlite")
+        cur = self.con.cursor()
+        result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
+                             (self.name_game,)).fetchall()
+        self.comments.setRowCount(len(result))
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+        self.con.commit()
 
     def home(self):
         self.close()
