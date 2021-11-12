@@ -21,7 +21,7 @@
    <widget class="QLineEdit" name="lineEdit_pass">
     <property name="geometry">
      <rect>
-      <x>97</x>
+      <x>100</x>
       <y>165</y>
       <width>321</width>
       <height>30</height>

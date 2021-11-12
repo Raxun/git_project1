@@ -1,10 +1,10 @@
 import sqlite3
 import sys
 
-from PyQt5 import uic
+from PyQt5 import uic, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QRadioButton, QButtonGroup, QPushButton, QAbstractItemView
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QRadioButton, QButtonGroup, QLineEdit, QAbstractItemView
 
 
 class Login(QMainWindow):
@@ -13,9 +13,11 @@ class Login(QMainWindow):
         uic.loadUi("log_in.ui", self)
         self.btn_create.clicked.connect(self.create_acc)
         self.btn_login.clicked.connect(self.login)
+        self.lineEdit_pass.setEchoMode(QtWidgets.QLineEdit.Password)
 
     def create_acc(self):
         self.r = Registration()
+        self.r.setFixedSize(690, 320)
         self.r.show()
 
     def login(self):
@@ -30,6 +32,7 @@ class Login(QMainWindow):
         for elem in result:
             if user_name == elem[0] and password == str(elem[-1]):
                 self.ex = MyWidget(user_name, password)
+                self.ex.setFixedSize(900, 600)
                 self.ex.show()
                 self.close()
             elif user_name == elem[0] and password != str(elem[-1]):
@@ -199,10 +202,12 @@ class MyWidget(QMainWindow):
         for i, elem in enumerate(result):
             if item.text() == elem[0]:
                 self.gi = GameInfo(item, self.user_name, self.password)
+                self.gi.setFixedSize(1300, 900)
                 self.gi.show()
 
     def open_profile(self):
         self.p = Profile(self.user_name, self.password)
+        self.p.setFixedSize(1000, 260)
         self.p.show()
 
 
@@ -215,6 +220,7 @@ class Registration(QMainWindow):
         self.password = ''
         self.button.clicked.connect(self.create_account)
         self.btn_home.clicked.connect(self.home)
+        self.lineEdit_pass.setEchoMode(QtWidgets.QLineEdit.Password)
 
     def create_account(self):
         cur = self.con.cursor()
@@ -300,19 +306,102 @@ class Profile(QMainWindow):
     def __init__(self, user_name, password):
         super().__init__()
         uic.loadUi('profile.ui', self)
-        self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = user_name
         self.password = password
         self.lineEdit_name.setText(self.user_name)
         self.lineEdit_pass.setText(self.password)
-        self.changename.clicked.connect(self.change_name)
-        self.changepass.clicked.connect(self.change_password)
+        self.changeinfo.clicked.connect(self.change_name)
+        self.changeinfo.clicked.connect(self.change_name)
 
     def change_name(self):
-        pass
+        self.con = sqlite3.connect("games_db.sqlite")
+        self.error_name.setText('')
+        self.error_pass.setText('')
+        cur = self.con.cursor()
+        new_name_acc = self.lineEdit_name.text()
+        new_password_acc = self.lineEdit_pass.text()
 
-    def change_name(self):
-        pass
+        if new_name_acc == '':
+            self.error_name.setText('Пустое поле')
+            if new_password_acc == '':
+                self.error_pass.setText('Пустое поле')
+        else:
+            limit_characters = 3
+            whitespace, dash, underscore = 0, 0, 0
+            result = cur.execute("""SELECT name_account, password FROM accounts""").fetchall()
+            flag_name = True
+            flag_password = True
+            past_letter = ''
+            for element in result:
+                if new_name_acc != element[0]:
+                    flag_name = True
+                else:
+                    flag_name = False
+            if 1 <= len(new_name_acc) <= 12:
+                for letter in new_name_acc:
+                    if (97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57) or \
+                            (ord(letter) == 32 or ord(letter) == 45 or ord(letter) == 95) or (ord(new_name_acc[-1])
+                                                                                              != 32):
+                        if ord(letter) == 32:
+                            if past_letter != '':
+                                if ord(past_letter) == 32:
+                                    self.error_name.setText('Нельзя ставить два пробела подряд')
+                                elif letter == new_name_acc[-1]:
+                                    self.error_name.setText('Нельзя ставить пробел в конце')
+                            whitespace += 1
+                            if whitespace > limit_characters:
+                                flag_name = False
+                                self.error_name.setText('Превышен лимит символа пробел, лимит - ' +
+                                                        str(limit_characters))
+                        elif ord(letter) == 45:
+                            dash += 1
+                            if dash > limit_characters:
+                                flag_name = False
+                                self.error_name.setText('Превышен лимит символа тире, лимит - ' + str(limit_characters))
+                        elif ord(letter) == 95:
+                            underscore += 1
+                            if underscore > limit_characters:
+                                flag_name = False
+                                self.error_name.setText('Превышен лимит символа нижнее подчеркивание, лимит - ' +
+                                                        str(limit_characters))
+                    else:
+                        flag_name = False
+                        self.error_name.setText('Разрешено использование только латинский букв, цифр, пробелов, тире, '
+                                                + 'нижних подчеркиваний ')
+                    past_letter = letter
+            else:
+                flag_name = False
+                self.error_name.setText('минимум 1 символ, максимум 12')
+
+            if 8 <= len(new_password_acc) <= 12:
+                for letter in new_name_acc:
+                    if 97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57:
+                        pass
+                    else:
+                        flag_password = False
+                        self.error_pass.setText('Разрешено использование только латинских букв и цифр')
+            else:
+                self.error_pass.setText('Длинна пароля должна быть не менее 8 символов и не более 12')
+
+            if flag_name and flag_password:
+                values1 = """UPDATE accounts SET name_account=? WHERE name_account=?"""
+                values2 = (new_name_acc, self.user_name)
+                cur.execute(values1, values2)
+                self.user_name = new_name_acc
+                self.password = new_password_acc
+                self.error_pass.setText('Успешно')
+                self.error_name.setText('Успешно')
+
+            else:
+                self.error_pass.setText('Ошибка')
+                self.error_name.setText('Ошибка')
+            self.con.commit()
+
+    def close(self):
+        self.p = Profile(self.user_name, self.password)
+        self.p.show()
+        self.close
+
 
 class GameInfo(QMainWindow):
     def __init__(self, item, user_name, password):
@@ -344,6 +433,8 @@ class GameInfo(QMainWindow):
         self.btn_home.clicked.connect(self.home)
         self.con.commit()
 
+
+
     def home(self):
         self.close()
 
@@ -351,5 +442,6 @@ class GameInfo(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Login()
+    ex.setFixedSize(700, 300)
     ex.show()
     sys.exit(app.exec())
