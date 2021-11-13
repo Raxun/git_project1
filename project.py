@@ -409,6 +409,7 @@ class GameInfo(QMainWindow):
     def __init__(self, item, user_name, password):
         super().__init__()
         uic.loadUi("game_info.ui", self)
+        self.flag = False
         self.user_name = user_name
         self.password = password
         self.name_game = item.text()
@@ -464,10 +465,12 @@ class GameInfo(QMainWindow):
 
     def answer_quest(self):
         self.con = sqlite3.connect("games_db.sqlite")
+        self.flag = True
         self.btn_past = 'answer/quest'
         cur = self.con.cursor()
         result = cur.execute("SELECT name_com, question, date,  name_ans, answer, date_ans FROM ans_ques "
-                             "WHERE name_game=?",
+                             "WHERE name_game=?"
+                             "ORDER BY date DESC",
                              (self.name_game,)).fetchall()
 
         self.comments.setColumnCount(3)
@@ -475,6 +478,7 @@ class GameInfo(QMainWindow):
         self.comments.horizontalHeader().hide()
         x = 0
         self.listLineEdit = []
+        self.btn_sends = QButtonGroup()
         self.comments.setRowCount(len(result) * 2)
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
@@ -491,36 +495,37 @@ class GameInfo(QMainWindow):
                         if j - 3 == 0:
                             item = self.cell('Ответить:')
                             self.comments.setItem(x + 1, j - 3, item)
-                        elif j - 3 == 1:
+                        if j - 3 == 1:
                             self.comments.setItem(x + 1, j - 3, QTableWidgetItem('Чтобы дать ответ дважды кликните на'
                                                                                  ' данное поле, затем нажмите "enter"'))
-                        elif j - 3 == 2:
+                        if j - 3 == 2:
                             item = self.cell('Макс. 100 символов')
-                            self.comments.setItem(x + 1, j - 3, item)
-                        else:
-                            item = self.cell(val)
                             self.comments.setItem(x + 1, j - 3, item)
             x += 2
         self.comments.horizontalHeader().resizeSection(2, 167)
         self.comments.horizontalHeader().resizeSection(1, 920)
         self.comments.horizontalHeader().resizeSection(0, 200)
         self.comments.itemChanged.connect(self.send_answer)
+        self.flag = False
         self.con.commit()
 
     def send_answer(self, item):
-        self.con = sqlite3.connect("games_db.sqlite")
-        text = item.text()
-        cur = self.con.cursor()
-        if 1 <= len(text) <= 100:
-            result = cur.execute("SELECT id FROM ans_ques WHERE name_game=?",
-                                 (self.name_game,)).fetchall()
-            for i, elem in enumerate(result):
-                if item.row() - 2 == i:
-                    datetime_string = str(datetime.now())
-                    values1 = """UPDATE ans_ques SET name_ans = ?, answer = ?, date_ans = ? WHERE id = ?"""
-                    values2 = (self.user_name, text, datetime_string[:-10], elem[0])
-                    cur.execute(values1, values2)
-                    #self.answer_quest()
+        if not self.flag and item.column() == 1 and self.btn_past != 'comment':
+            self.con = sqlite3.connect("games_db.sqlite")
+            text = item.text()
+            print(item.text())
+            cur = self.con.cursor()
+            if 1 <= len(text) <= 100:
+                result = cur.execute("SELECT id FROM ans_ques WHERE name_game=?"
+                                     "ORDER BY date DESC",
+                                     (self.name_game,)).fetchall()
+                for i, elem in enumerate(result):
+                    if int((item.row() - 1) / 2) == i:
+                        datetime_string = str(datetime.now())
+                        values1 = """UPDATE ans_ques SET name_ans = ?, answer = ?, date_ans = ? WHERE id = ?"""
+                        values2 = (self.user_name, text, datetime_string[:-10], elem[0])
+                        cur.execute(values1, values2)
+
             self.con.commit()
 
     def cell(self, val):
