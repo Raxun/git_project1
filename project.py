@@ -4,8 +4,9 @@ import sys
 from datetime import datetime
 from PyQt5 import uic, QtWidgets, QtCore
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QPushButton
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QRadioButton, QButtonGroup, QAbstractItemView, QLineEdit
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QRadioButton, QButtonGroup, QAbstractItemView
 
 
 class Login(QMainWindow):
@@ -412,6 +413,8 @@ class GameInfo(QMainWindow):
         self.password = password
         self.name_game = item.text()
         self.label_name.setText(self.name_game)
+        self.btn_past = ''
+        self.listLineEdit = []
         self.con = sqlite3.connect("games_db.sqlite")
 
         cur = self.con.cursor()
@@ -431,57 +434,37 @@ class GameInfo(QMainWindow):
                     pixmap = pixmap.scaled(290, 390)
                 self.label_image.setPixmap(pixmap)
                 self.textBrowser.setText(elem[-1])
+
         self.btn_home.clicked.connect(self.home)
         self.btn_a.clicked.connect(self.answer_quest)
         self.btn_c.clicked.connect(self.comment)
-
+        self.btn_send.clicked.connect(self.send)
+        delegate = AlignDelegate(self.comments)
+        self.comments.setItemDelegate(delegate)
         self.con.commit()
 
     def comment(self):
-
+        self.btn_past = 'comment'
         cur = self.con.cursor()
         result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
                              (self.name_game,)).fetchall()
         self.comments.setRowCount(len(result))
-        # максимум 100 символов
         self.comments.setColumnCount(3)
         self.comments.verticalHeader().hide()
         self.comments.horizontalHeader().hide()
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
-                self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+                item = self.cell(val)
+                self.comments.setItem(i, j, item)
         self.comments.horizontalHeader().resizeSection(2, 167)
-        self.comments.horizontalHeader().resizeSection(1, 950)
+        self.comments.horizontalHeader().resizeSection(1, 960)
         self.comments.horizontalHeader().resizeSection(0, 160)
-        self.comments.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.comments.itemDoubleClicked.connect(self.del_come)
-        self.btn_send.clicked.connect(self.send_comment)
-        self.con.commit()
-
-    def send_comment(self):
-        if self.line_com.text() != 'Максимум 80 символов, минимум 1':
-            cur = self.con.cursor()
-            if 1 <= len(self.line_com.text()) <= 80 and self.line_com.text() != 'Максимум 100 символов':
-                datetime_string = str(datetime.now())
-                values1 = """INSERT INTO comments (name_game, name_com, comment, date)
-                                VALUES (?, ?, ?, ?)"""
-                values2 = (str(self.name_game), str(self.user_name), str(self.line_com.text()), str(datetime_string[:-10]))
-                cur.execute(values1, values2)
-                self.line_com.setText('')
-                self.con.commit()
-            else:
-                self.line_com.setText('Максимум 80 символов, минимум 1')
-            self.con = sqlite3.connect("games_db.sqlite")
-            cur = self.con.cursor()
-            result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
-                                 (self.name_game,)).fetchall()
-            self.comments.setRowCount(len(result))
-            for i, elem in enumerate(result):
-                for j, val in enumerate(elem):
-                    self.comments.setItem(i, j, QTableWidgetItem(str(val)))
         self.con.commit()
 
     def answer_quest(self):
+        self.con = sqlite3.connect("games_db.sqlite")
+        self.btn_past = 'answer/quest'
         cur = self.con.cursor()
         result = cur.execute("SELECT name_com, question, date,  name_ans, answer, date_ans FROM ans_ques "
                              "WHERE name_game=?",
@@ -492,44 +475,59 @@ class GameInfo(QMainWindow):
         self.comments.horizontalHeader().hide()
         x = 0
         self.listLineEdit = []
-        self.btn_sends = QButtonGroup()
         self.comments.setRowCount(len(result) * 2)
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
                 if j < 2:
-                    self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+                    item = self.cell(val)
+                    self.comments.setItem(x, j, item)
                 else:
                     if val != '':
                         if j - 3 == 0:
                             val = 'Ответил: ' + val
-                        self.comments.setItem(x + 1, j - 3, QTableWidgetItem(str(val)))
+                        item = self.cell(val)
+                        self.comments.setItem(x + 1, j - 3, item)
                     else:
                         if j - 3 == 0:
-                            self.comments.setItem(x + 1, j - 3, QTableWidgetItem('Ответить:'))
-                        if j - 3 == 1:
-                            line = QLineEdit(str(x + 1))
-                            self.listLineEdit.append(line)
-                            self.comments.setItem(x + 1, j - 3, QTableWidgetItem(line))
-                        if j - 3 == 1:
-                            btn = QPushButton(str(x + 1))
-                            self.btn_sends.addButton(btn)
-                            btn.setText('Отправить')
-                            self.comments.setItem(x + 1, j - 3, QTableWidgetItem(btn))
+                            item = self.cell('Ответить:')
+                            self.comments.setItem(x + 1, j - 3, item)
+                        elif j - 3 == 1:
+                            self.comments.setItem(x + 1, j - 3, QTableWidgetItem('Чтобы дать ответ дважды кликните на'
+                                                                                 ' данное поле, затем нажмите "enter"'))
+                        elif j - 3 == 2:
+                            item = self.cell('Макс. 100 символов')
+                            self.comments.setItem(x + 1, j - 3, item)
+                        else:
+                            item = self.cell(val)
+                            self.comments.setItem(x + 1, j - 3, item)
             x += 2
-        delegate = AlignDelegate(self.comments)
-        self.comments.setItemDelegateForColumn(0, delegate)
-        delegate2 = AlignDelegate2(self.comments)
-        for i in range(x):
-            if i % 2 == 0:
-                self.comments.setItemDelegateForRow(i, delegate2)
         self.comments.horizontalHeader().resizeSection(2, 167)
-        self.comments.horizontalHeader().resizeSection(1, 950)
-        self.comments.horizontalHeader().resizeSection(0, 160)
-        self.comments.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        #self.btn_send.clicked.connect(self.send_quest())
-        #self.btn_c.clicked.connect(self.comments)
+        self.comments.horizontalHeader().resizeSection(1, 920)
+        self.comments.horizontalHeader().resizeSection(0, 200)
+        self.comments.itemChanged.connect(self.send_answer)
         self.con.commit()
 
+    def send_answer(self, item):
+        self.con = sqlite3.connect("games_db.sqlite")
+        text = item.text()
+        cur = self.con.cursor()
+        if 1 <= len(text) <= 100:
+            result = cur.execute("SELECT id FROM ans_ques WHERE name_game=?",
+                                 (self.name_game,)).fetchall()
+            for i, elem in enumerate(result):
+                if item.row() - 2 == i:
+                    datetime_string = str(datetime.now())
+                    values1 = """UPDATE ans_ques SET name_ans = ?, answer = ?, date_ans = ? WHERE id = ?"""
+                    values2 = (self.user_name, text, datetime_string[:-10], elem[0])
+                    cur.execute(values1, values2)
+                    #self.answer_quest()
+            self.con.commit()
+
+    def cell(self, val):
+        item = QTableWidgetItem()
+        item.setText(val)
+        item.setFlags(Qt.ItemIsEditable)
+        return item
 
     def del_come(self, item):
         cur = self.con.cursor()
@@ -539,51 +537,65 @@ class GameInfo(QMainWindow):
                 del_id = elem[0]
                 cur.execute("""DELETE from comments where id = ?""", (del_id, ))
                 self.con.commit()
-            self.con = sqlite3.connect("games_db.sqlite")
-            cur = self.con.cursor()
-            result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
-                                 (self.name_game,)).fetchall()
-            self.comments.setRowCount(len(result))
-            for i, elem in enumerate(result):
-                for j, val in enumerate(elem):
-                    self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+                self.con = sqlite3.connect("games_db.sqlite")
+                cur = self.con.cursor()
+                result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
+                                     (self.name_game,)).fetchall()
+                self.comments.setRowCount(len(result))
+                for n, element in enumerate(result):
+                    for j, val in enumerate(element):
+                        self.comments.setItem(n, j, QTableWidgetItem(str(val)))
         self.con.commit()
 
-    def send_quest(self):
+    def send(self):
         cur = self.con.cursor()
-        if 1 <= len(self.line_com.text()) <= 80 and self.line_com.text() != 'Максимум 100 символов':
-            datetime_string = str(datetime.now())
-            values1 = """INSERT INTO ans_ques (name_com, question, date,  name_ans, answer, date_ans)
-                            VALUES (?, ?, ?, ?, ?, ?)"""
-            values2 = (self.user_name, self.line_com.text(), datetime_string[:-10], '', '', '')
-            cur.execute(values1, values2)
-            self.line_com.setText('')
+        if self.btn_past == 'comment':
+            if self.line_com.text() != 'Максимум 80 символов, минимум 1':
+                if 1 <= len(self.line_com.text()) <= 100 and self.line_com.text() != 'Максимум 100 символов':
+                    datetime_string = str(datetime.now())
+                    values1 = """INSERT INTO comments (name_game, name_com, comment, date)
+                                    VALUES (?, ?, ?, ?)"""
+                    values2 = (str(self.name_game), str(self.user_name), str(self.line_com.text()),
+                               str(datetime_string[:-10]))
+                    cur.execute(values1, values2)
+                    self.line_com.setText('')
+                    self.con.commit()
+                else:
+                    self.line_com.setText('Максимум 100 символов, минимум 1')
+                self.con = sqlite3.connect("games_db.sqlite")
+                cur = self.con.cursor()
+                result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
+                                     (self.name_game,)).fetchall()
+                self.comments.setRowCount(len(result))
+                for i, elem in enumerate(result):
+                    for j, val in enumerate(elem):
+                        self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+            self.con.commit()
+        elif self.btn_past == 'answer/quest':
+            if 1 <= len(self.line_com.text()) <= 100 and self.line_com.text() != 'Максимум 100 символов':
+                datetime_string = str(datetime.now())
+                values1 = """INSERT INTO ans_ques (name_game, name_com, question, date,  name_ans, answer, date_ans)
+                                VALUES (?, ?, ?, ?, ?, ?, ?)"""
+                values2 = (self.name_game, self.user_name, self.line_com.text(), datetime_string[:-10], '', '', '')
+                cur.execute(values1, values2)
+                self.line_com.setText('')
+                self.con.commit()
+            else:
+                self.line_com.setText('Максимум 100 символов, минимум 1')
+            self.answer_quest()
             self.con.commit()
         else:
-            self.line_com.setText('Максимум 80 символов, минимум 1')
-        self.con = sqlite3.connect("games_db.sqlite")
-        cur = self.con.cursor()
-        result = cur.execute("SELECT name_com, question, date,  name_ans, answer, date_ans FROM ans_ques "
-                             "WHERE name_game=?",
-                             (self.name_game,)).fetchall()
-        self.comments.setRowCount(len(result))
-        for i, elem in enumerate(result):
-            for j, val in enumerate(elem):
-                self.comments.setItem(i, j, QTableWidgetItem(str(val)))
-        self.con.commit()
+            self.line_com.setText('Выберите категорию')
 
     def home(self):
         self.close()
+
 
 class AlignDelegate(QtWidgets.QStyledItemDelegate):
     def initStyleOption(self, option, index):
         super(AlignDelegate, self).initStyleOption(option, index)
         option.displayAlignment = QtCore.Qt.AlignCenter
 
-class AlignDelegate2(QtWidgets.QStyledItemDelegate):
-    def initStyleOption(self, option, index):
-        super(AlignDelegate2, self).initStyleOption(option, index)
-        option.displayAlignment2 = QtCore.Qt.AlignLeft
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
