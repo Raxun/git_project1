@@ -160,7 +160,7 @@ font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
       <x>5</x>
       <y>509</y>
       <width>1290</width>
-      <height>381</height>
+      <height>351</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -202,6 +202,23 @@ font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>860</y>
+      <width>1271</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+    </property>
+    <property name="text">
+     <string>*Чтобы удалить комментарий, дважды кликните на его содержание</string>
     </property>
    </widget>
   </widget>
