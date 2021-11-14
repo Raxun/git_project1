@@ -52,6 +52,18 @@ color: rgb(255, 255, 255);</string>
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="btn_notifications">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+font: 10pt &quot;MS Shell Dlg 2&quot;;
+color: rgb(255, 255, 255);</string>
+       </property>
+       <property name="text">
+        <string>Уведомления</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
    <widget class="QTableWidget" name="tableWidget_1">

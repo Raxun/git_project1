@@ -33,15 +33,15 @@ class Login(QMainWindow):
         result = cur.execute("""SELECT name_account, admin, password FROM accounts""").fetchall()
 
         for elem in result:
-            if user_name == elem[0] and password == str(elem[-1]):
+            if str(user_name) == str(elem[0]) and password == str(elem[-1]):
                 admin = elem[1]
                 self.ex = MyWidget(user_name, password, admin)
                 self.ex.setFixedSize(900, 600)
                 self.ex.show()
                 self.close()
-            elif user_name == elem[0] and password != str(elem[-1]):
+            elif str(user_name) == str(elem[0]) and password != str(elem[-1]):
                 self.lbl_pass.setText('Неверный пароль')
-            elif user_name != elem[0] and password == str(elem[-1]):
+            elif str(user_name) != str(elem[0]) and password == str(elem[-1]):
                 self.lbl_name.setText('Неверное имя')
             else:
                 if self.lbl_pass.text() != 'Неверный пароль' and self.lbl_name.text() != 'Неверное имя' and \
@@ -306,8 +306,8 @@ class Registration(QMainWindow):
                 self.lbl_success.setText('Длинна пароля должна быть не менее 8 символов')
                 flag_password = False
             if flag_name and flag_password:
-                values1 = """INSERT INTO accounts (name_account, password, admin, favorites)
-                                VALUES (?, ?, 0, '')"""
+                values1 = """INSERT INTO accounts (name_account, password, admin, favorites, notifications)
+                                VALUES (?, ?, 0, '', '')"""
                 values2 = (name_new_acc, password_new_acc)
                 cur.execute(values1, values2)
                 self.user_name = name_new_acc
@@ -445,14 +445,18 @@ class GameInfo(QMainWindow):
         for i, elem in enumerate(result):
             if elem[1] == self.name_game:
                 self.label_image.setText(self.name_game)
-                pixmap = QPixmap(elem[-2])
+                pixmap = QPixmap(elem[-3])
+                if elem[-1] == 0:
+                    self.line_cost.setText('Бесплатно')
+                else:
+                    self.line_cost.setText(str(elem[-1]))
                 if self.name_game in sp_icon_games:
                     pixmap = pixmap.scaled(280, 280)
                     self.label_image.move(10, -40)
                 else:
                     pixmap = pixmap.scaled(290, 390)
                 self.label_image.setPixmap(pixmap)
-                self.textBrowser.setText(elem[-1])
+                self.textBrowser.setText(elem[-2])
         self.comments.verticalHeader().hide()
         self.comments.horizontalHeader().hide()
         self.comments.setColumnCount(3)
@@ -471,7 +475,10 @@ class GameInfo(QMainWindow):
                 if str(element[0]) != '':
                     if str(self.id_add) == str(element[0]):
                         self.btn_favourites.setText('Добавлено')
-
+        if self.admin == 0:
+            self.btn_change.deleteLater()
+            self.line_cost.setEnabled(False)
+        self.btn_change.clicked.connect(self.notifications)
         self.comments.itemDoubleClicked.connect(self.del_come)
         self.btn_favourites.clicked.connect(self.add_favorites)
         self.btn_home.clicked.connect(self.home)
@@ -481,6 +488,49 @@ class GameInfo(QMainWindow):
         delegate = AlignDelegate(self.comments)
         self.comments.setItemDelegate(delegate)
         self.comments.itemDoubleClicked.connect(self.del_come)
+
+    def notifications(self):
+        cur = self.con.cursor()
+        cur.execute("UPDATE games SET cost=? WHERE name_game=?", (self.line_cost.text(), self.name_game, ))
+        result = cur.execute("""SELECT id, favorites FROM accounts""").fetchall()
+        id_list = []
+        id_elem = ''
+        for elem in result:
+            for val in elem:
+                if val == elem[0]:
+                    id_elem = val
+                    id_list.append(val)
+                elif val == elem[-1]:
+                    if val != '':
+                        if len(str(val)) > 1:
+                            val = val.split()
+                            if self.id_add in val:
+                                pass
+                            else:
+                                del id_list[id_list.index(id_elem)]
+                        else:
+                            if self.id_add == str(val):
+                                pass
+                            else:
+                                del id_list[id_list.index(id_elem)]
+                    else:
+                        del id_list[id_list.index(id_elem)]
+
+        for elem in id_list:
+            notif_list = []
+            result = cur.execute("SELECT notifications FROM accounts WHERE id=?", (int(elem), )).fetchall()
+            for element in result:
+                if element[0] != '':
+                    if len(str(element[0])) > 1:
+                        element = element.split()
+                        if element[0] != self.id_add:
+                            notif_list.append(element[0])
+                    else:
+                        if element[0] != self.id_add:
+                            notif_list.append(str(element[0]))
+            cur.execute("UPDATE accounts SET notifications=? WHERE id=?", (' '.join(notif_list) + ' '
+                                                                           + self.id_add, int(elem), ))
+        self.con.commit()
 
     def comment(self):
         self.btn_past = 'comment'
@@ -617,7 +667,6 @@ class GameInfo(QMainWindow):
                 if str(element[0]) != '':
                     if str(self.id_add) == str(element[0]):
                         self.btn_favourites.setText('Добавлено')
-        ids = ''
         values = """UPDATE accounts SET favorites=? WHERE name_account=? AND password=?"""
         print(self.id_favor)
         print(len(self.id_favor))
