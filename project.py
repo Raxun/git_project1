@@ -98,7 +98,6 @@ class MyWidget(QMainWindow):
         self.tableWidget_3.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_3.verticalHeader().hide()
         self.tableWidget_3.horizontalHeader().hide()
-
         self.tableWidget_4.setColumnCount(1)
         self.tableWidget_4.setRowCount(2)
         sp = ['По возрастанию', 'По убыванию']
@@ -110,6 +109,7 @@ class MyWidget(QMainWindow):
         self.tableWidget_4.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_4.verticalHeader().hide()
         self.tableWidget_4.horizontalHeader().hide()
+        self.btn_notifications.clicked.connect(self.open_notif)
         self.btn_favorites.clicked.connect(self.favorites)
         self.btn_profile.clicked.connect(self.open_profile)
         self.btn_search.clicked.connect(self.search)
@@ -205,6 +205,11 @@ class MyWidget(QMainWindow):
         self.tableWidget_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tableWidget_1.itemDoubleClicked.connect(self.open_game_info)
         self.con.commit()
+
+    def open_notif(self):
+        self.n = Notifications(self.user_name, self.password, self.admin)
+        self.n.setFixedSize(800, 600)
+        self.n.show()
 
     def open_game_info(self, item):
         cur = self.con.cursor()
@@ -748,6 +753,64 @@ class Favorites(QMainWindow):
                         self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
                         x += 1
         self.tableWidget.setRowCount(x)
+
+    def open_game_info(self, item):
+        cur = self.con.cursor()
+        result = cur.execute("""SELECT name_game FROM games""").fetchall()
+        for i, elem in enumerate(result):
+            if item.text() == elem[0]:
+                self.gi = GameInfo(item, self.user_name, self.password, self.admin)
+                self.gi.setFixedSize(1300, 900)
+                self.gi.show()
+
+
+class Notifications(QMainWindow):
+    def __init__(self, user_name, password, admin):
+        super().__init__()
+        uic.loadUi("notif.ui", self)
+        self.user_name = user_name
+        self.password = password
+        self.admin = admin
+        self.con = sqlite3.connect("games_db.sqlite")
+        cur = self.con.cursor()
+        result = cur.execute("SELECT notifications FROM accounts WHERE name_account=? AND password=?",
+                             (self.user_name, self.password, )).fetchall()
+        notif = ''
+        for elem in result:
+            if elem[0] != '':
+                notif = elem[0]
+        if notif != '':
+            if len(notif) > 1:
+                notif = notif.split()
+        print(notif)
+        self.tablenotif.setColumnCount(1)
+        self.tablenotif.setRowCount(len(notif))
+        self.tablenotif.horizontalHeader().resizeSection(0, 781)
+        self.tablenotif.verticalHeader().hide()
+        self.tablenotif.horizontalHeader().hide()
+        self.tablenotif.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        print('1')
+        if notif != '':
+            for i, elem in enumerate(notif):
+                result = cur.execute("SELECT name_game, cost FROM games WHERE id=?",
+                                     (int(elem),)).fetchall()
+                for element in result:
+                    self.tablenotif.setItem(i, 0, QTableWidgetItem(str(element[0]) + ' теперь стоит ' + str(element[-1])))
+        print('2')
+        self.tablenotif.itemDoubleClicked.connect(self.open_game_info)
+        self.btn_del.clicked.connect(self.del_all)
+        self.btn_home.clicked.connect(self.home)
+
+    def del_all(self):
+        cur = self.con.cursor()
+        cur.execute("UPDATE accounts SET notifications='' WHERE name_account=? AND password=?", (self.user_name,
+                                                                                                 self.password, ))
+
+        self.con.commit()
+
+    def home(self):
+        self.con.commit()
+        self.close()
 
     def open_game_info(self, item):
         cur = self.con.cursor()
