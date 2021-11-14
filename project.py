@@ -30,10 +30,12 @@ class Login(QMainWindow):
         cur = con.cursor()
         user_name = self.lineEdit_name.text()
         password = self.lineEdit_pass.text()
-        result = cur.execute("""SELECT name_account, password FROM accounts""").fetchall()
+        result = cur.execute("""SELECT name_account, admin, password FROM accounts""").fetchall()
+
         for elem in result:
             if user_name == elem[0] and password == str(elem[-1]):
-                self.ex = MyWidget(user_name, password)
+                admin = elem[1]
+                self.ex = MyWidget(user_name, password, admin)
                 self.ex.setFixedSize(900, 600)
                 self.ex.show()
                 self.close()
@@ -48,11 +50,11 @@ class Login(QMainWindow):
 
 
 class MyWidget(QMainWindow):
-    def __init__(self, user_name, password):
+    def __init__(self, user_name, password, admin):
         super().__init__()
         uic.loadUi("main_window.ui", self)
         self.con = sqlite3.connect("games_db.sqlite")
-
+        self.admin = admin
         cur = self.con.cursor()
 
         self.user_name = user_name
@@ -108,9 +110,15 @@ class MyWidget(QMainWindow):
         self.tableWidget_4.horizontalHeader().setDefaultSectionSize(209)
         self.tableWidget_4.verticalHeader().hide()
         self.tableWidget_4.horizontalHeader().hide()
+        self.btn_favorites.clicked.connect(self.favorites)
         self.btn_profile.clicked.connect(self.open_profile)
         self.btn_search.clicked.connect(self.search)
         self.con.commit()
+
+    def favorites(self):
+        self.f = Favorites(self.user_name, self.password, self.admin)
+        self.f.setFixedSize(1000, 260)
+        self.f.show()
 
     def search(self):
         if self.lineEdit_search.text() == '   Не найдено!':
@@ -203,12 +211,12 @@ class MyWidget(QMainWindow):
         result = cur.execute("""SELECT name_game FROM games""").fetchall()
         for i, elem in enumerate(result):
             if item.text() == elem[0]:
-                self.gi = GameInfo(item, self.user_name, self.password)
+                self.gi = GameInfo(item, self.user_name, self.password, self.admin)
                 self.gi.setFixedSize(1300, 900)
                 self.gi.show()
 
     def open_profile(self):
-        self.p = Profile(self.user_name, self.password)
+        self.p = Profile(self.user_name, self.password, self.admin)
         self.p.setFixedSize(1000, 260)
         self.p.show()
 
@@ -228,8 +236,10 @@ class Registration(QMainWindow):
         cur = self.con.cursor()
         name_new_acc = self.lineEdit_name.text()
         password_new_acc = self.lineEdit_pass.text()
+        self.lbl_success.setText('')
+        self.lbl_success_2.setText('')
         if name_new_acc == '' or password_new_acc == '':
-            self.label_4.setText('Ошибка')
+            self.lbl_success.setText('Введите данные')
         else:
             limit_characters = 3
             whitespace, dash, underscore = 0, 0, 0
@@ -238,66 +248,70 @@ class Registration(QMainWindow):
             flag_password = True
             past_letter = ''
             for element in result:
-                if name_new_acc != element[0]:
+                if name_new_acc != str(element[0]) and password_new_acc != str(element[-1]):
                     flag_name = True
                 else:
                     flag_name = False
+
+                    self.lbl_success.setText('Такой аккаунт уже существует')
+                    break
             if 1 <= len(name_new_acc) <= 12:
                 for letter in name_new_acc:
                     if (97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57) or \
-                            (ord(letter) == 32 or ord(letter) == 45 or ord(letter) == 95) or (ord(name_new_acc[-1])
-                                                                                              != 32):
+                            (ord(letter) == 32 or ord(letter) == 45 or ord(letter) == 95) or\
+                            (ord(name_new_acc[-1]) != 32) or (ord(name_new_acc[0]) != 32):
                         if ord(letter) == 32:
                             if past_letter != '':
                                 if ord(past_letter) == 32:
-                                    self.lbl_errorn.setText('Нельзя ставить два пробела подряд')
+                                    self.lbl_success_2.setText('Нельзя ставить два и более пробела подряд')
+                                    flag_name = False
                                 elif letter == name_new_acc[-1]:
-                                    self.lbl_errorn.setText('Нельзя ставить пробел в конце')
+                                    self.lbl_success_2.setText('Нельзя ставить пробел в конце')
+                                    flag_name = False
                             whitespace += 1
                             if whitespace > limit_characters:
                                 flag_name = False
-                                self.lbl_errorn.setText('Превышен лимит символа пробел, лимит - ' +
-                                                        str(limit_characters))
+                                self.lbl_success_2.setText('Превышен лимит символа пробел, лимит - ' +
+                                                           str(limit_characters))
                         elif ord(letter) == 45:
                             dash += 1
                             if dash > limit_characters:
                                 flag_name = False
-                                self.lbl_errorn.setText('Превышен лимит символа тире, лимит - ' + str(limit_characters))
+                                self.lbl_success_2.setText('Превышен лимит символа тире, лимит - ' +
+                                                           str(limit_characters))
                         elif ord(letter) == 95:
                             underscore += 1
                             if underscore > limit_characters:
                                 flag_name = False
-                                self.lbl_errorn.setText('Превышен лимит символа нижнее подчеркивание, лимит - ' +
-                                                        str(limit_characters))
+                                self.lbl_success_2.setText('Превышен лимит символа нижнее подчеркивание, лимит - ' +
+                                                           str(limit_characters))
                     else:
+                        print(letter)
                         flag_name = False
-                        self.lbl_errorn.setText('Разрешено использование только латинский букв, цифр, пробелов, тире, '
-                                                + 'нижних подчеркиваний ')
+                        self.lbl_success_2.setText('Разрешено использование только латинский букв, цифр, пробелов, '
+                                                   'тире, ' + 'нижних подчеркиваний ')
                     past_letter = letter
             else:
                 flag_name = False
-                self.lbl_errorn.setText('минимум 1 символ, максимум 12')
-
-            if 8 <= len(password_new_acc) <= 12:
-                for letter in name_new_acc:
+                self.lbl_success_2.setText('минимум 1 символ, максимум 12')
+            if 8 <= len(password_new_acc):
+                for letter in password_new_acc:
                     if 97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57:
                         pass
                     else:
                         flag_password = False
-                        self.lbl_errorp.setText('Разрешено использование только латинских букв и цифр')
+                        self.lbl_success.setText('Разрешено использование только латинских букв и цифр')
             else:
-                self.lbl_errorp.setText('Длинна пароля должна быть не менее 8 символов и не более 12')
-
+                self.lbl_success.setText('Длинна пароля должна быть не менее 8 символов')
+                flag_password = False
             if flag_name and flag_password:
-                values1 = """INSERT INTO accounts (name_account, password)
-                                VALUES (?, ?)"""
+                values1 = """INSERT INTO accounts (name_account, password, admin, favorites)
+                                VALUES (?, ?, 0, '')"""
                 values2 = (name_new_acc, password_new_acc)
                 cur.execute(values1, values2)
                 self.user_name = name_new_acc
                 self.password = password_new_acc
                 self.lbl_success.setText('Успешно')
-            else:
-                self.lbl_success.setText('Ошибка')
             self.con.commit()
 
     def home(self):
@@ -305,11 +319,12 @@ class Registration(QMainWindow):
 
 
 class Profile(QMainWindow):
-    def __init__(self, user_name, password):
+    def __init__(self, user_name, password, admin):
         super().__init__()
         uic.loadUi('profile.ui', self)
         self.user_name = user_name
         self.password = password
+        self.admin = admin
         self.lineEdit_name.setText(self.user_name)
         self.lineEdit_pass.setText(self.password)
         self.changeinfo.clicked.connect(self.change_name)
@@ -384,7 +399,6 @@ class Profile(QMainWindow):
                         self.error_pass.setText('Разрешено использование только латинских букв и цифр')
             else:
                 self.error_pass.setText('Длинна пароля должна быть не менее 8 символов и не более 12')
-
             if flag_name and flag_password:
                 values1 = """UPDATE accounts SET name_account=? WHERE name_account=?"""
                 values2 = (new_name_acc, self.user_name)
@@ -400,19 +414,20 @@ class Profile(QMainWindow):
             self.con.commit()
 
     def close(self):
-        self.p = Profile(self.user_name, self.password)
+        self.p = Profile(self.user_name, self.password, self.admin)
         self.p.show()
         self.close()
 
 
 class GameInfo(QMainWindow):
-    def __init__(self, item, user_name, password):
+    def __init__(self, item, user_name, password, admin):
         super().__init__()
         uic.loadUi("game_info.ui", self)
         self.flag = False
         self.user_name = user_name
         self.password = password
         self.name_game = item.text()
+        self.admin = admin
         self.label_name.setText(self.name_game)
         self.btn_past = ''
         self.listLineEdit = []
@@ -435,14 +450,28 @@ class GameInfo(QMainWindow):
                     pixmap = pixmap.scaled(290, 390)
                 self.label_image.setPixmap(pixmap)
                 self.textBrowser.setText(elem[-1])
-
+        self.comments.verticalHeader().hide()
+        self.comments.horizontalHeader().hide()
+        self.comments.setColumnCount(3)
+        result = cur.execute("""SELECT id, name_game FROM games""").fetchall()
+        for elem in result:
+            if elem[-1] == self.name_game:
+                self.id_add = elem[0]
+        result = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
+                             (self.user_name, self.password,)).fetchall()
+        for element in result:
+            for val in element:
+                if str(self.id_add) in val.split(' '):
+                    self.btn_favourites.setText('Добавлено')
+        self.comments.itemDoubleClicked.connect(self.del_come)
+        self.btn_favourites.clicked.connect(self.add_favorites)
         self.btn_home.clicked.connect(self.home)
         self.btn_a.clicked.connect(self.answer_quest)
         self.btn_c.clicked.connect(self.comment)
         self.btn_send.clicked.connect(self.send)
         delegate = AlignDelegate(self.comments)
         self.comments.setItemDelegate(delegate)
-        self.con.commit()
+        self.comments.itemDoubleClicked.connect(self.del_come)
 
     def comment(self):
         self.btn_past = 'comment'
@@ -450,21 +479,19 @@ class GameInfo(QMainWindow):
         result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
                              (self.name_game,)).fetchall()
         self.comments.setRowCount(len(result))
-        self.comments.setColumnCount(3)
-        self.comments.verticalHeader().hide()
-        self.comments.horizontalHeader().hide()
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
-                item = self.cell(val)
-                self.comments.setItem(i, j, item)
-        self.comments.horizontalHeader().resizeSection(2, 167)
-        self.comments.horizontalHeader().resizeSection(1, 960)
+                if str(elem[0]) == self.user_name and val == elem[1]:
+                    self.comments.setItem(i, j, QTableWidgetItem(str(val)))
+                else:
+                    item = self.cell(val)
+                    self.comments.setItem(i, j, item)
+
+        self.comments.horizontalHeader().resizeSection(2, 157)
+        self.comments.horizontalHeader().resizeSection(1, 950)
         self.comments.horizontalHeader().resizeSection(0, 160)
-        self.comments.itemDoubleClicked.connect(self.del_come)
-        self.con.commit()
 
     def answer_quest(self):
-        self.con = sqlite3.connect("games_db.sqlite")
         self.flag = True
         self.btn_past = 'answer/quest'
         cur = self.con.cursor()
@@ -472,13 +499,8 @@ class GameInfo(QMainWindow):
                              "WHERE name_game=?"
                              "ORDER BY date DESC",
                              (self.name_game,)).fetchall()
-
-        self.comments.setColumnCount(3)
-        self.comments.verticalHeader().hide()
-        self.comments.horizontalHeader().hide()
         x = 0
         self.listLineEdit = []
-        self.btn_sends = QButtonGroup()
         self.comments.setRowCount(len(result) * 2)
         for i, elem in enumerate(result):
             for j, val in enumerate(elem):
@@ -502,16 +524,14 @@ class GameInfo(QMainWindow):
                             item = self.cell('Макс. 100 символов')
                             self.comments.setItem(x + 1, j - 3, item)
             x += 2
-        self.comments.horizontalHeader().resizeSection(2, 167)
-        self.comments.horizontalHeader().resizeSection(1, 920)
-        self.comments.horizontalHeader().resizeSection(0, 200)
+        self.comments.horizontalHeader().resizeSection(2, 165)
+        self.comments.horizontalHeader().resizeSection(1, 910)
+        self.comments.horizontalHeader().resizeSection(0, 190)
         self.comments.itemChanged.connect(self.send_answer)
         self.flag = False
-        self.con.commit()
 
     def send_answer(self, item):
         if not self.flag and item.column() == 1 and self.btn_past != 'comment':
-            self.con = sqlite3.connect("games_db.sqlite")
             text = item.text()
             print(item.text())
             cur = self.con.cursor()
@@ -525,8 +545,7 @@ class GameInfo(QMainWindow):
                         values1 = """UPDATE ans_ques SET name_ans = ?, answer = ?, date_ans = ? WHERE id = ?"""
                         values2 = (self.user_name, text, datetime_string[:-10], elem[0])
                         cur.execute(values1, values2)
-
-            self.con.commit()
+                        self.con.commit()
 
     def cell(self, val):
         item = QTableWidgetItem()
@@ -535,22 +554,14 @@ class GameInfo(QMainWindow):
         return item
 
     def del_come(self, item):
-        cur = self.con.cursor()
-        result = cur.execute("""SELECT id, name_com, comment FROM comments""").fetchall()
-        for i, elem in enumerate(result):
-            if str(item.text()) == str(elem[-1]) and elem[1] == self.user_name:
-                del_id = elem[0]
-                cur.execute("""DELETE from comments where id = ?""", (del_id, ))
-                self.con.commit()
-                self.con = sqlite3.connect("games_db.sqlite")
-                cur = self.con.cursor()
-                result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
-                                     (self.name_game,)).fetchall()
-                self.comments.setRowCount(len(result))
-                for n, element in enumerate(result):
-                    for j, val in enumerate(element):
-                        self.comments.setItem(n, j, QTableWidgetItem(str(val)))
-        self.con.commit()
+        if self.btn_past == 'comment':
+            cur = self.con.cursor()
+            result = cur.execute("""SELECT id, name_com, comment FROM comments""").fetchall()
+            for i, elem in enumerate(result):
+                if str(item.text()) == str(elem[-1]) and (str(elem[1]) == self.user_name or self.admin == 1):
+                    del_id = elem[0]
+                    cur.execute("""DELETE from comments where id = ?""", (del_id, ))
+            self.comment()
 
     def send(self):
         cur = self.con.cursor()
@@ -565,17 +576,9 @@ class GameInfo(QMainWindow):
                     cur.execute(values1, values2)
                     self.line_com.setText('')
                     self.con.commit()
+                    self.comment()
                 else:
                     self.line_com.setText('Максимум 100 символов, минимум 1')
-                self.con = sqlite3.connect("games_db.sqlite")
-                cur = self.con.cursor()
-                result = cur.execute("SELECT name_com, comment, date FROM comments WHERE name_game=?",
-                                     (self.name_game,)).fetchall()
-                self.comments.setRowCount(len(result))
-                for i, elem in enumerate(result):
-                    for j, val in enumerate(elem):
-                        self.comments.setItem(i, j, QTableWidgetItem(str(val)))
-            self.con.commit()
         elif self.btn_past == 'answer/quest':
             if 1 <= len(self.line_com.text()) <= 100 and self.line_com.text() != 'Максимум 100 символов':
                 datetime_string = str(datetime.now())
@@ -588,12 +591,58 @@ class GameInfo(QMainWindow):
             else:
                 self.line_com.setText('Максимум 100 символов, минимум 1')
             self.answer_quest()
-            self.con.commit()
         else:
             self.line_com.setText('Выберите категорию')
 
+    def add_favorites(self):
+        cur = self.con.cursor()
+        ids = ''
+        values = """UPDATE accounts SET favorites=? WHERE name_account=? AND password=?"""
+        result = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
+                             (self.user_name, self.password,)).fetchall()
+        if self.btn_favourites.text() != 'Добавлено':
+            for elem in result:
+                if elem[0] == '':
+                    ids = str(self.id_add) + ' '
+                else:
+                    ids = str(elem[0]) + ' ' + str(self.id_add)
+            cur.execute(values, (ids, self.user_name, self.password))
+            self.btn_favourites.setText('Добавлено')
+        else:
+            cur = self.con.cursor()
+            for elem in result:
+                for val in elem:
+                    val = val.split(' ')
+                    del val[val.index(str(self.id_add))]
+                    ids = ' '.join(val)
+            cur.execute(values, (ids, self.user_name, self.password))
+            self.btn_favourites.setText('Удалено')
+            self.con.commit()
+
     def home(self):
+        self.con.commit()
         self.close()
+
+
+class Favorites(QMainWindow):
+    def __init__(self, user_name, password, admin):
+        super().__init__()
+        uic.loadUi("fav_games.ui", self)
+        self.user_name = user_name
+        self.password = password
+        self.admin = admin
+        self.con = sqlite3.connect("games_db.sqlite")
+        cur = self.con.cursor()
+        res1 = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
+                           (self.user_name, self.password,)).fetchall()
+        res2 = cur.execute("""SELECT id, name_game FROM games""").fetchall()
+        for elem in res1:
+            for val in elem:
+                favs = val.split()
+        for i, elem in enumerate(res2):
+            for j, val in enumerate(elem):
+                if str(elem[0]) in favs:
+                    print('sdf')
 
 
 class AlignDelegate(QtWidgets.QStyledItemDelegate):

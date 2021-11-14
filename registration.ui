@@ -108,42 +108,6 @@ font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="lbl_errorn">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
-      <y>90</y>
-      <width>241</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(48, 48, 48);
-color: rgb(255, 255, 255);
-font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="lbl_errorp">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
-      <y>170</y>
-      <width>241</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(48, 48, 48);
-color: rgb(255, 255, 255);
-font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
    <widget class="QPushButton" name="button">
     <property name="geometry">
      <rect>
@@ -165,9 +129,9 @@ font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="lbl_success">
     <property name="geometry">
      <rect>
-      <x>319</x>
+      <x>20</x>
       <y>220</y>
-      <width>62</width>
+      <width>590</width>
       <height>21</height>
      </rect>
     </property>
@@ -196,6 +160,24 @@ font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
      <string>Вернуться</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_success_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>130</y>
+      <width>590</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);
+font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>
