@@ -23,15 +23,19 @@
       <x>10</x>
       <y>10</y>
       <width>781</width>
-      <height>541</height>
+      <height>551</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);</string>
     </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>560</y>
+      <y>570</y>
       <width>551</width>
       <height>20</height>
      </rect>
@@ -43,6 +47,23 @@ color: rgb(255, 255, 255);</string>
     </property>
     <property name="text">
      <string>*Чтобы увидеть больше информации, кликните дважды по названию игры</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_update">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>567</y>
+      <width>170</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>Обновить</string>
     </property>
    </widget>
   </widget>

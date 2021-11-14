@@ -163,6 +163,23 @@ font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="btn_home">
+    <property name="geometry">
+     <rect>
+      <x>870</x>
+      <y>10</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255);
+font: 10pt &quot;MS Shell Dlg 2&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Вернуться</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

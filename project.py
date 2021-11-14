@@ -117,7 +117,7 @@ class MyWidget(QMainWindow):
 
     def favorites(self):
         self.f = Favorites(self.user_name, self.password, self.admin)
-        self.f.setFixedSize(1000, 260)
+        self.f.setFixedSize(800, 600)
         self.f.show()
 
     def search(self):
@@ -219,6 +219,7 @@ class MyWidget(QMainWindow):
         self.p = Profile(self.user_name, self.password, self.admin)
         self.p.setFixedSize(1000, 260)
         self.p.show()
+        self.close()
 
 
 class Registration(QMainWindow):
@@ -327,6 +328,7 @@ class Profile(QMainWindow):
         self.admin = admin
         self.lineEdit_name.setText(self.user_name)
         self.lineEdit_pass.setText(self.password)
+        self.btn_home.clicked.connect(self.close_ex)
         self.changeinfo.clicked.connect(self.change_name)
         self.changeinfo.clicked.connect(self.change_name)
 
@@ -413,9 +415,10 @@ class Profile(QMainWindow):
                 self.error_name.setText('Ошибка')
             self.con.commit()
 
-    def close(self):
-        self.p = Profile(self.user_name, self.password, self.admin)
-        self.p.show()
+    def close_ex(self):
+        self.ex = MyWidget(self.user_name, self.password, self.admin)
+        self.ex.setFixedSize(900, 600)
+        self.ex.show()
         self.close()
 
 
@@ -453,16 +456,22 @@ class GameInfo(QMainWindow):
         self.comments.verticalHeader().hide()
         self.comments.horizontalHeader().hide()
         self.comments.setColumnCount(3)
-        result = cur.execute("""SELECT id, name_game FROM games""").fetchall()
+        result = cur.execute("SELECT id FROM games WHERE name_game=?", (self.name_game, )).fetchall()
         for elem in result:
-            if elem[-1] == self.name_game:
-                self.id_add = elem[0]
+            self.id_add = str(elem[0])
         result = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
                              (self.user_name, self.password,)).fetchall()
         for element in result:
-            for val in element:
-                if str(self.id_add) in val.split(' '):
-                    self.btn_favourites.setText('Добавлено')
+            self.id_favor = str(element[0])
+            if len(str(element[0])) > 1:
+                for val in element:
+                    if str(self.id_add) in val.split(' '):
+                        self.btn_favourites.setText('Добавлено')
+            else:
+                if str(element[0]) != '':
+                    if str(self.id_add) == str(element[0]):
+                        self.btn_favourites.setText('Добавлено')
+
         self.comments.itemDoubleClicked.connect(self.del_come)
         self.btn_favourites.clicked.connect(self.add_favorites)
         self.btn_home.clicked.connect(self.home)
@@ -596,28 +605,45 @@ class GameInfo(QMainWindow):
 
     def add_favorites(self):
         cur = self.con.cursor()
-        ids = ''
-        values = """UPDATE accounts SET favorites=? WHERE name_account=? AND password=?"""
         result = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
                              (self.user_name, self.password,)).fetchall()
-        if self.btn_favourites.text() != 'Добавлено':
-            for elem in result:
-                if elem[0] == '':
+        for element in result:
+            self.id_favor = str(element[0])
+            if len(str(element[0])) > 1:
+                for val in element:
+                    if str(self.id_add) in val.split(' '):
+                        self.btn_favourites.setText('Добавлено')
+            else:
+                if str(element[0]) != '':
+                    if str(self.id_add) == str(element[0]):
+                        self.btn_favourites.setText('Добавлено')
+        ids = ''
+        values = """UPDATE accounts SET favorites=? WHERE name_account=? AND password=?"""
+        print(self.id_favor)
+        print(len(self.id_favor))
+        if self.btn_favourites.text() != 'Добавлено' or self.btn_favourites.text() == 'Удалено':
+            if len(self.id_favor) <= 1:
+                if self.id_favor == '':
                     ids = str(self.id_add) + ' '
                 else:
-                    ids = str(elem[0]) + ' ' + str(self.id_add)
+                    ids = str(self.id_favor) + ' ' + str(self.id_add)
+            else:
+                ids = self.id_favor + ' ' + str(self.id_add)
             cur.execute(values, (ids, self.user_name, self.password))
             self.btn_favourites.setText('Добавлено')
         else:
-            cur = self.con.cursor()
-            for elem in result:
-                for val in elem:
-                    val = val.split(' ')
-                    del val[val.index(str(self.id_add))]
-                    ids = ' '.join(val)
+            if len(self.id_favor) > 1:
+                self.id_favor = self.id_favor.split(' ')
+                print(self.id_favor)
+                del self.id_favor[self.id_favor.index(self.id_add)]
+                print(self.id_favor)
+                ids = ' '.join(self.id_favor)
+                print(ids)
+            else:
+                ids = ''
             cur.execute(values, (ids, self.user_name, self.password))
             self.btn_favourites.setText('Удалено')
-            self.con.commit()
+        self.con.commit()
 
     def home(self):
         self.con.commit()
@@ -635,14 +661,53 @@ class Favorites(QMainWindow):
         cur = self.con.cursor()
         res1 = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
                            (self.user_name, self.password,)).fetchall()
-        res2 = cur.execute("""SELECT id, name_game FROM games""").fetchall()
+        flag = True
         for elem in res1:
-            for val in elem:
-                favs = val.split()
+            if flag:
+                for val in elem:
+                    if val != '':
+                        if len(res1) == 1:
+                            self.fav_s = str(val)
+                            flag = False
+                        else:
+                            self.fav_s = val.split()
+                            flag = False
+                    else:
+                        self.fav_s = ''
+        self.tableWidget.setColumnCount(1)
+        self.tableWidget.horizontalHeader().resizeSection(0, 781)
+        self.tableWidget.verticalHeader().hide()
+        self.tableWidget.horizontalHeader().hide()
+        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget.itemDoubleClicked.connect(self.update_table)
+        self.btn_update.clicked.connect(self.update_table)
+        self.con.commit()
+
+    def update_table(self):
+        cur = self.con.cursor()
+        res2 = cur.execute("""SELECT id, name_game FROM games""").fetchall()
+        x = 0
+        self.tableWidget.setRowCount(len(self.fav_s))
         for i, elem in enumerate(res2):
-            for j, val in enumerate(elem):
-                if str(elem[0]) in favs:
-                    print('sdf')
+            if str(elem[0]) in self.fav_s:
+                if len(str(self.fav_s)) != 1:
+                    if self.fav_s != '':
+                        self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
+                        x += 1
+                else:
+                    if str(elem[0]) == self.fav_s:
+                        self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
+                        x += 1
+        self.tableWidget.setRowCount(x)
+
+    def open_game_info(self, item):
+        cur = self.con.cursor()
+        result = cur.execute("""SELECT name_game FROM games""").fetchall()
+        for i, elem in enumerate(result):
+            if item.text() == elem[0]:
+                self.gi = GameInfo(item, self.user_name, self.password, self.admin)
+                self.gi.setFixedSize(1300, 900)
+                self.gi.show()
 
 
 class AlignDelegate(QtWidgets.QStyledItemDelegate):
