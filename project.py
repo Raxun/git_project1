@@ -522,13 +522,15 @@ class GameInfo(QMainWindow):
 
         for elem in id_list:
             notif_list = []
+            element_list = []
             result = cur.execute("SELECT notifications FROM accounts WHERE id=?", (int(elem), )).fetchall()
             for element in result:
                 if element[0] != '':
                     if len(str(element[0])) > 2:
-                        element = element.split()
-                        if element[0] != self.id_add:
-                            notif_list.append(element[0])
+                        element_list = element[0].split()
+                        for elems in element_list:
+                            if elems not in self.id_add:
+                                notif_list.append(str(elems))
                     else:
                         if element[0] != self.id_add:
                             notif_list.append(str(element[0]))
