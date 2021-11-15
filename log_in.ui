@@ -141,7 +141,7 @@ color: rgb(255, 255, 255);
 font: 16pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
-     <string>Зайти</string>
+     <string>Войти</string>
     </property>
    </widget>
    <widget class="QLabel" name="lbl_name">

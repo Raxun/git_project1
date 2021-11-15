@@ -36,7 +36,7 @@ color: rgb(255, 255, 255);</string>
      <rect>
       <x>20</x>
       <y>570</y>
-      <width>551</width>
+      <width>451</width>
       <height>20</height>
      </rect>
     </property>
@@ -49,22 +49,39 @@ color: rgb(255, 255, 255);</string>
      <string>*Чтобы увидеть больше информации, кликните дважды по названию игры</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_update">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>567</y>
-      <width>170</width>
+      <x>470</x>
+      <y>570</y>
+      <width>321</width>
       <height>25</height>
      </rect>
     </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(48, 48, 48);
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="btn_update">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
 color: rgb(255, 255, 255);</string>
-    </property>
-    <property name="text">
-     <string>Обновить</string>
-    </property>
+       </property>
+       <property name="text">
+        <string>Обновить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_home">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(48, 48, 48);
+color: rgb(255, 255, 255);</string>
+       </property>
+       <property name="text">
+        <string>Вернуться</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
  </widget>

@@ -31,7 +31,6 @@ class Login(QMainWindow):
         user_name = self.lineEdit_name.text()
         password = self.lineEdit_pass.text()
         result = cur.execute("""SELECT name_account, admin, password FROM accounts""").fetchall()
-
         for elem in result:
             if str(user_name) == str(elem[0]) and password == str(elem[-1]):
                 admin = elem[1]
@@ -254,11 +253,10 @@ class Registration(QMainWindow):
             flag_password = True
             past_letter = ''
             for element in result:
-                if name_new_acc != str(element[0]) and password_new_acc != str(element[-1]):
+                if name_new_acc != str(element[0]):
                     flag_name = True
                 else:
                     flag_name = False
-
                     self.lbl_success.setText('Такой аккаунт уже существует')
                     break
             if 1 <= len(name_new_acc) <= 12:
@@ -328,6 +326,7 @@ class Profile(QMainWindow):
     def __init__(self, user_name, password, admin):
         super().__init__()
         uic.loadUi('profile.ui', self)
+        self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = user_name
         self.password = password
         self.admin = admin
@@ -338,13 +337,11 @@ class Profile(QMainWindow):
         self.changeinfo.clicked.connect(self.change_name)
 
     def change_name(self):
-        self.con = sqlite3.connect("games_db.sqlite")
         self.error_name.setText('')
         self.error_pass.setText('')
         cur = self.con.cursor()
         new_name_acc = self.lineEdit_name.text()
         new_password_acc = self.lineEdit_pass.text()
-
         if new_name_acc == '':
             self.error_name.setText('Пустое поле')
             if new_password_acc == '':
@@ -357,7 +354,7 @@ class Profile(QMainWindow):
             flag_password = True
             past_letter = ''
             for element in result:
-                if new_name_acc != element[0]:
+                if new_password_acc == self.user_name or new_name_acc != element[0]:
                     flag_name = True
                 else:
                     flag_name = False
@@ -398,7 +395,7 @@ class Profile(QMainWindow):
                 self.error_name.setText('минимум 1 символ, максимум 12')
 
             if 8 <= len(new_password_acc) <= 12:
-                for letter in new_name_acc:
+                for letter in new_password_acc:
                     if 97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57:
                         pass
                     else:
@@ -407,8 +404,8 @@ class Profile(QMainWindow):
             else:
                 self.error_pass.setText('Длинна пароля должна быть не менее 8 символов и не более 12')
             if flag_name and flag_password:
-                values1 = """UPDATE accounts SET name_account=? WHERE name_account=?"""
-                values2 = (new_name_acc, self.user_name)
+                values1 = """UPDATE accounts SET name_account=?, password=? WHERE name_account=?"""
+                values2 = (new_name_acc, new_password_acc, self.user_name)
                 cur.execute(values1, values2)
                 self.user_name = new_name_acc
                 self.password = new_password_acc
@@ -416,8 +413,10 @@ class Profile(QMainWindow):
                 self.error_name.setText('Успешно')
 
             else:
-                self.error_pass.setText('Ошибка')
-                self.error_name.setText('Ошибка')
+                if not flag_password:
+                    self.error_pass.setText('Ошибка')
+                if not flag_name:
+                    self.error_name.setText('Ошибка')
             self.con.commit()
 
     def close_ex(self):
@@ -432,8 +431,8 @@ class GameInfo(QMainWindow):
         super().__init__()
         uic.loadUi("game_info.ui", self)
         self.flag = False
-        self.user_name = user_name
-        self.password = password
+        self.user_name = str(user_name)
+        self.password = str(password)
         self.name_game = item.text()
         self.admin = admin
         self.label_name.setText(self.name_game)
@@ -472,7 +471,7 @@ class GameInfo(QMainWindow):
                              (self.user_name, self.password,)).fetchall()
         for element in result:
             self.id_favor = str(element[0])
-            if len(str(element[0])) > 1:
+            if len(str(element[0])) > 2:
                 for val in element:
                     if str(self.id_add) in val.split(' '):
                         self.btn_favourites.setText('Добавлено')
@@ -507,7 +506,7 @@ class GameInfo(QMainWindow):
                     id_list.append(val)
                 elif val == elem[-1]:
                     if val != '':
-                        if len(str(val)) > 1:
+                        if len(str(val)) > 2:
                             val = val.split()
                             if self.id_add in val:
                                 pass
@@ -526,7 +525,7 @@ class GameInfo(QMainWindow):
             result = cur.execute("SELECT notifications FROM accounts WHERE id=?", (int(elem), )).fetchall()
             for element in result:
                 if element[0] != '':
-                    if len(str(element[0])) > 1:
+                    if len(str(element[0])) > 2:
                         element = element.split()
                         if element[0] != self.id_add:
                             notif_list.append(element[0])
@@ -664,7 +663,7 @@ class GameInfo(QMainWindow):
                              (self.user_name, self.password,)).fetchall()
         for element in result:
             self.id_favor = str(element[0])
-            if len(str(element[0])) > 1:
+            if len(str(element[0])) > 2:
                 for val in element:
                     if str(self.id_add) in val.split(' '):
                         self.btn_favourites.setText('Добавлено')
@@ -673,8 +672,6 @@ class GameInfo(QMainWindow):
                     if str(self.id_add) == str(element[0]):
                         self.btn_favourites.setText('Добавлено')
         values = """UPDATE accounts SET favorites=? WHERE name_account=? AND password=?"""
-        print(self.id_favor)
-        print(len(self.id_favor))
         if self.btn_favourites.text() != 'Добавлено' or self.btn_favourites.text() == 'Удалено':
             if len(self.id_favor) <= 1:
                 if self.id_favor == '':
@@ -688,11 +685,8 @@ class GameInfo(QMainWindow):
         else:
             if len(self.id_favor) > 1:
                 self.id_favor = self.id_favor.split(' ')
-                print(self.id_favor)
                 del self.id_favor[self.id_favor.index(self.id_add)]
-                print(self.id_favor)
                 ids = ' '.join(self.id_favor)
-                print(ids)
             else:
                 ids = ''
             cur.execute(values, (ids, self.user_name, self.password))
@@ -715,53 +709,53 @@ class Favorites(QMainWindow):
         cur = self.con.cursor()
         res1 = cur.execute("SELECT favorites FROM accounts WHERE name_account=? AND password=?",
                            (self.user_name, self.password,)).fetchall()
-        flag = True
         for elem in res1:
-            if flag:
-                for val in elem:
-                    if val != '':
-                        if len(res1) == 1:
-                            self.fav_s = str(val)
-                            flag = False
-                        else:
-                            self.fav_s = val.split()
-                            flag = False
-                    else:
-                        self.fav_s = ''
+            if len(str(elem[0])) > 2:
+                self.fav_s = elem[0].split(' ')
+            else:
+                if elem[0] != '':
+                    self.fav_s = str(elem[0])
         self.tableWidget.setColumnCount(1)
         self.tableWidget.horizontalHeader().resizeSection(0, 781)
         self.tableWidget.verticalHeader().hide()
         self.tableWidget.horizontalHeader().hide()
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tableWidget.itemDoubleClicked.connect(self.update_table)
+        self.tableWidget.itemDoubleClicked.connect(self.open_game_info)
         self.btn_update.clicked.connect(self.update_table)
+        self.btn_home.clicked.connect(self.home)
         self.con.commit()
 
+    def home(self):
+        self.close()
+
     def update_table(self):
+        self.con = sqlite3.connect("games_db.sqlite")
         cur = self.con.cursor()
         res2 = cur.execute("""SELECT id, name_game FROM games""").fetchall()
         x = 0
         self.tableWidget.setRowCount(len(self.fav_s))
         for i, elem in enumerate(res2):
-            if str(elem[0]) in self.fav_s:
-                if len(str(self.fav_s)) != 1:
-                    if self.fav_s != '':
-                        self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
-                        x += 1
-                else:
-                    if str(elem[0]) == self.fav_s:
-                        self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
-                        x += 1
+            if len(str(self.fav_s)) > 2:
+                if str(elem[0]) in self.fav_s:
+                    self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
+                    x += 1
+            else:
+                if str(elem[0]) == self.fav_s and self.fav_s != '':
+                    self.tableWidget.setItem(x, 0, QTableWidgetItem(elem[-1]))
+                    x += 1
         self.tableWidget.setRowCount(x)
+        self.con.commit()
 
     def open_game_info(self, item):
         cur = self.con.cursor()
         result = cur.execute("""SELECT name_game FROM games""").fetchall()
         for i, elem in enumerate(result):
             if item.text() == elem[0]:
+                self.con.commit()
                 self.gi = GameInfo(item, self.user_name, self.password, self.admin)
                 self.gi.setFixedSize(1300, 900)
                 self.gi.show()
+                self.close()
 
 
 class Notifications(QMainWindow):
@@ -775,29 +769,29 @@ class Notifications(QMainWindow):
         cur = self.con.cursor()
         result = cur.execute("SELECT notifications FROM accounts WHERE name_account=? AND password=?",
                              (self.user_name, self.password, )).fetchall()
+        n = 0
         notif = ''
         for elem in result:
-            if elem[0] != '':
-                notif = elem[0]
-        if notif != '':
-            if len(notif) > 1:
-                notif = notif.split()
-        print(notif)
+            if len(str(elem[0])) > 2:
+                notif = elem[0].split()
+                n = len(notif)
+            else:
+                if elem[0] != '':
+                    notif = str(elem[0])
+                    n = 1
         self.tablenotif.setColumnCount(1)
-        self.tablenotif.setRowCount(len(notif))
+        self.tablenotif.setRowCount(n)
         self.tablenotif.horizontalHeader().resizeSection(0, 781)
         self.tablenotif.verticalHeader().hide()
         self.tablenotif.horizontalHeader().hide()
         self.tablenotif.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        print('1')
         if notif != '':
             for i, elem in enumerate(notif):
                 result = cur.execute("SELECT name_game, cost FROM games WHERE id=?",
                                      (int(elem),)).fetchall()
                 for element in result:
-                    self.tablenotif.setItem(i, 0, QTableWidgetItem(str(element[0]) + ' теперь стоит ' + str(element[-1])))
-        print('2')
-        self.tablenotif.itemDoubleClicked.connect(self.open_game_info)
+                    self.tablenotif.setItem(i, 0, QTableWidgetItem(str(element[0]) + ' теперь стоит ' +
+                                                                   str(element[-1])))
         self.btn_del.clicked.connect(self.del_all)
         self.btn_home.clicked.connect(self.home)
 
@@ -805,21 +799,11 @@ class Notifications(QMainWindow):
         cur = self.con.cursor()
         cur.execute("UPDATE accounts SET notifications='' WHERE name_account=? AND password=?", (self.user_name,
                                                                                                  self.password, ))
-
         self.con.commit()
 
     def home(self):
         self.con.commit()
         self.close()
-
-    def open_game_info(self, item):
-        cur = self.con.cursor()
-        result = cur.execute("""SELECT name_game FROM games""").fetchall()
-        for i, elem in enumerate(result):
-            if item.text() == elem[0]:
-                self.gi = GameInfo(item, self.user_name, self.password, self.admin)
-                self.gi.setFixedSize(1300, 900)
-                self.gi.show()
 
 
 class AlignDelegate(QtWidgets.QStyledItemDelegate):
