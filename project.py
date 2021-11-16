@@ -13,6 +13,7 @@ class Login(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi("log_in.ui", self)
+        self.setWindowTitle('Login')
         self.btn_create.clicked.connect(self.create_acc)
         self.btn_login.clicked.connect(self.login)
         self.lineEdit_pass.setEchoMode(QtWidgets.QLineEdit.Password)
@@ -52,6 +53,7 @@ class MyWidget(QMainWindow):
     def __init__(self, user_name, password, admin):
         super().__init__()
         uic.loadUi("main_window.ui", self)
+        self.setWindowTitle('Главный экран')
         self.con = sqlite3.connect("games_db.sqlite")
         self.admin = admin
         cur = self.con.cursor()
@@ -230,6 +232,7 @@ class Registration(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('registration.ui', self)
+        self.setWindowTitle('Регистрация')
         self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = ''
         self.password = ''
@@ -326,6 +329,7 @@ class Profile(QMainWindow):
     def __init__(self, user_name, password, admin):
         super().__init__()
         uic.loadUi('profile.ui', self)
+        self.setWindowTitle('Профиль')
         self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = user_name
         self.password = password
@@ -429,6 +433,7 @@ class Profile(QMainWindow):
 class GameInfo(QMainWindow):
     def __init__(self, item, user_name, password, admin):
         super().__init__()
+        self.setWindowTitle('Информационное окно')
         uic.loadUi("game_info.ui", self)
         self.flag = False
         self.user_name = str(user_name)
@@ -704,6 +709,7 @@ class Favorites(QMainWindow):
     def __init__(self, user_name, password, admin):
         super().__init__()
         uic.loadUi("fav_games.ui", self)
+        self.setWindowTitle('Список избранных игр')
         self.user_name = user_name
         self.password = password
         self.admin = admin
@@ -763,6 +769,7 @@ class Favorites(QMainWindow):
 class Notifications(QMainWindow):
     def __init__(self, user_name, password, admin):
         super().__init__()
+        self.setWindowTitle('Уведомления')
         uic.loadUi("notif.ui", self)
         self.user_name = user_name
         self.password = password
