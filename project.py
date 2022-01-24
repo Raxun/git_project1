@@ -16,6 +16,8 @@ class Login(QMainWindow):
         self.setWindowTitle('Login')
         self.btn_create.clicked.connect(self.create_acc)
         self.btn_login.clicked.connect(self.login)
+        self.ex = None
+        self.r = None
         self.lineEdit_pass.setEchoMode(QtWidgets.QLineEdit.Password)
 
     def create_acc(self):
@@ -55,9 +57,12 @@ class MyWidget(QMainWindow):
         uic.loadUi("main_window.ui", self)
         self.setWindowTitle('Главный экран')
         self.con = sqlite3.connect("games_db.sqlite")
+        self.n = None
         self.admin = admin
         cur = self.con.cursor()
-
+        self.p = None
+        self.f = None
+        self.gi = None
         self.user_name = user_name
         self.password = password
         self.genre = QButtonGroup()
@@ -66,7 +71,7 @@ class MyWidget(QMainWindow):
         self.genre_search = ''
         self.year_search = ''
         self.relevance_search = ''
-
+        self.gi = None
         result = cur.execute("""SELECT * FROM genres""").fetchall()
         self.tableWidget_2.setColumnCount(1)
         self.tableWidget_2.setRowCount(len(result) + 1)
@@ -236,6 +241,7 @@ class Registration(QMainWindow):
         self.con = sqlite3.connect("games_db.sqlite")
         self.user_name = ''
         self.password = ''
+        self.ex = None
         self.button.clicked.connect(self.create_account)
         self.btn_home.clicked.connect(self.home)
         self.lineEdit_pass.setEchoMode(QtWidgets.QLineEdit.Password)
@@ -262,7 +268,7 @@ class Registration(QMainWindow):
                     flag_name = False
                     self.lbl_success.setText('Такой аккаунт уже существует')
                     break
-            if 1 <= len(name_new_acc) <= 12:
+            if 1 <= len(name_new_acc) <= 16:
                 for letter in name_new_acc:
                     if (97 <= ord(letter) <= 122 or 65 <= ord(letter) <= 90 or 48 <= ord(letter) <= 57) or \
                             (ord(letter) == 32 or ord(letter) == 45 or ord(letter) == 95) or\
@@ -524,10 +530,8 @@ class GameInfo(QMainWindow):
                                 del id_list[id_list.index(id_elem)]
                     else:
                         del id_list[id_list.index(id_elem)]
-
         for elem in id_list:
             notif_list = []
-            element_list = []
             result = cur.execute("SELECT notifications FROM accounts WHERE id=?", (int(elem), )).fetchall()
             for element in result:
                 if element[0] != '':
@@ -556,7 +560,6 @@ class GameInfo(QMainWindow):
                 else:
                     item = self.cell(val)
                     self.comments.setItem(i, j, item)
-
         self.comments.horizontalHeader().resizeSection(2, 157)
         self.comments.horizontalHeader().resizeSection(1, 950)
         self.comments.horizontalHeader().resizeSection(0, 160)
@@ -708,6 +711,7 @@ class GameInfo(QMainWindow):
 class Favorites(QMainWindow):
     def __init__(self, user_name, password, admin):
         super().__init__()
+        self.gi = None
         uic.loadUi("fav_games.ui", self)
         self.setWindowTitle('Список избранных игр')
         self.user_name = user_name
